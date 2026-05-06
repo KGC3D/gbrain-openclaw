@@ -1,12 +1,10 @@
 #!/usr/bin/env node
 import crypto from "node:crypto";
-import fs from "node:fs";
 import http from "node:http";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { loadEnvFile } from "../lib/local-env.mjs";
-import { meetingSlug, meetingToMarkdown } from "../lib/meeting-to-markdown.mjs";
-import { syncBrain } from "../lib/gbrain.mjs";
+import { processMeetings } from "../lib/meeting-store.mjs";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(here, "..");
@@ -16,7 +14,6 @@ const port = Number(process.env.CIRCLEBACK_GBRAIN_PORT || 3137);
 const brainRepo = process.env.BRAIN_REPO || `${process.env.HOME}/brain`;
 const signingSecret = process.env.CIRCLEBACK_WEBHOOK_SECRET || "";
 const requireSignature = process.env.CIRCLEBACK_REQUIRE_SIGNATURE !== "false";
-const rawDir = path.join(brainRepo, "raw", "circleback");
 
 function verifySignature(rawBody, signature) {
   if (!signingSecret) return !requireSignature;
@@ -50,21 +47,14 @@ async function handleWebhook(req, res) {
     return send(res, 400, { ok: false, error: "invalid JSON body" });
   }
 
-  const { slug, markdown } = meetingToMarkdown(meeting);
-  const mdPath = path.join(brainRepo, `${slug}.md`);
-  const jsonPath = path.join(rawDir, `${path.basename(slug)}.json`);
-  fs.mkdirSync(path.dirname(mdPath), { recursive: true });
-  fs.mkdirSync(path.dirname(jsonPath), { recursive: true });
-  fs.writeFileSync(mdPath, markdown);
-  fs.writeFileSync(jsonPath, `${JSON.stringify(meeting, null, 2)}\n`);
-
-  const sync = syncBrain(brainRepo, { embed: process.env.GBRAIN_EMBED_ON_INGEST !== "false" });
-  return send(res, sync.ok ? 200 : 500, {
-    ok: sync.ok,
-    slug,
-    markdownPath: mdPath,
-    rawPath: jsonPath,
-    gbrain: { stdout: sync.stdout, stderr: sync.stderr },
+  const result = processMeetings([meeting], brainRepo, { embed: process.env.GBRAIN_EMBED_ON_INGEST !== "false" });
+  const first = result.written[0];
+  return send(res, result.ok ? 200 : 500, {
+    ok: result.ok,
+    slug: first?.slug,
+    markdownPath: first?.mdPath,
+    rawPath: first?.jsonPath,
+    gbrain: { stdout: result.gbrain.stdout, stderr: result.gbrain.stderr },
   });
 }
 

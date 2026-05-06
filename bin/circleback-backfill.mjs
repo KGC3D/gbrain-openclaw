@@ -1,11 +1,9 @@
 #!/usr/bin/env node
 import { spawnSync } from "node:child_process";
-import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { loadEnvFile } from "../lib/local-env.mjs";
-import { meetingToMarkdown } from "../lib/meeting-to-markdown.mjs";
-import { syncBrain } from "../lib/gbrain.mjs";
+import { processMeetings } from "../lib/meeting-store.mjs";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(here, "..");
@@ -43,23 +41,14 @@ if (!ids.length) {
 
 const details = runCircleback(["--json", "meetings", "read", ...ids.map(String)]);
 const meetings = Array.isArray(details) ? details : details.meetings || details.results || details.data || [details];
-const rawDir = path.join(brainRepo, "raw", "circleback");
-fs.mkdirSync(rawDir, { recursive: true });
-
-for (const meeting of meetings) {
-  const { slug, markdown } = meetingToMarkdown(meeting);
-  const mdPath = path.join(brainRepo, `${slug}.md`);
-  const jsonPath = path.join(rawDir, `${path.basename(slug)}.json`);
-  fs.mkdirSync(path.dirname(mdPath), { recursive: true });
-  fs.writeFileSync(mdPath, markdown);
-  fs.writeFileSync(jsonPath, `${JSON.stringify(meeting, null, 2)}\n`);
-  console.log(`Wrote ${mdPath}`);
+const result = processMeetings(meetings, brainRepo, { embed: process.env.GBRAIN_EMBED_ON_INGEST !== "false" });
+for (const item of result.written) {
+  console.log(`Wrote ${item.mdPath}`);
 }
 
-const sync = syncBrain(brainRepo, { embed: process.env.GBRAIN_EMBED_ON_INGEST !== "false" });
-if (!sync.ok) {
-  console.error(sync.stderr || sync.stdout);
-  process.exit(sync.status || 1);
+if (!result.ok) {
+  console.error(result.gbrain.stderr || result.gbrain.stdout);
+  process.exit(result.gbrain.status || 1);
 }
-if (sync.stderr) console.error(sync.stderr);
-console.log(sync.stdout);
+if (result.gbrain.stderr) console.error(result.gbrain.stderr);
+console.log(result.gbrain.stdout);

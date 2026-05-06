@@ -10,5 +10,9 @@ if [[ -f "$SCRIPT_DIR/config.env" ]]; then
   set +a
 fi
 
-node "$SCRIPT_DIR/bin/circleback-backfill.mjs" --last "${CIRCLEBACK_RECONCILE_DAYS:-2}"
+node "$SCRIPT_DIR/bin/circleback-cloudflare-pull.mjs"
+
+if [[ "${CIRCLEBACK_CLI_RECONCILE_ENABLED:-true}" == "true" ]]; then
+  node "$SCRIPT_DIR/bin/circleback-backfill.mjs" --last "${CIRCLEBACK_RECONCILE_DAYS:-2}"
+fi
 "$SCRIPT_DIR/bin/gbrain-meeting-maintenance.sh"
