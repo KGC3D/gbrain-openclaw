@@ -11,8 +11,16 @@ if [[ -f "$SCRIPT_DIR/config.env" ]]; then
 fi
 
 BRAIN_REPO="${BRAIN_REPO:-$HOME/brain}"
-gbrain sync --repo "$BRAIN_REPO"
-gbrain embed --stale || true
+if git -C "$BRAIN_REPO" rev-parse --verify HEAD >/dev/null 2>&1; then
+  gbrain sync --repo "$BRAIN_REPO"
+else
+  gbrain import "$BRAIN_REPO" --no-embed
+fi
+if [[ -n "${OPENAI_API_KEY:-}" ]]; then
+  gbrain embed --stale || true
+else
+  echo "[gbrain] embed --stale skipped: OPENAI_API_KEY is not set."
+fi
 gbrain extract links --source db || true
 gbrain extract timeline --source db || true
 gbrain doctor --json

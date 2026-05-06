@@ -91,13 +91,39 @@ node ./bin/circleback-backfill.mjs --last 30
 
 ## Maintenance
 
-Run this after batches or nightly:
+Run this after batches:
 
 ```bash
 ./bin/gbrain-meeting-maintenance.sh
 ```
 
-The installer also adds `ai.openclaw.circleback-gbrain-reconcile`, which runs every 15 minutes. It pulls the Cloudflare Worker inbox first, then optionally backfills the last 2 days through Circleback CLI. Circleback CLI backfill starts working after `circleback login` succeeds.
+The installer also adds `ai.openclaw.circleback-gbrain-reconcile`, which runs every 15 minutes. It pulls the Cloudflare Worker inbox first, then optionally backfills the last 2 days through Circleback CLI. Enable CLI backfill only after `circleback login` succeeds:
+
+```bash
+CIRCLEBACK_CLI_RECONCILE_ENABLED=true
+```
+
+The installer also adds `ai.openclaw.circleback-gbrain-nightly`, which runs every night at 03:17 local time. It is the robust maintenance path:
+
+- Uses a lock so two runs cannot overlap.
+- Pulls the Cloudflare Worker inbox with retries.
+- Runs a larger Circleback CLI backfill window, default 14 days.
+- Runs GBrain sync, stale embeddings, link/timeline extraction, and doctor checks.
+- Applies a hard timeout per maintenance step, default 30 minutes.
+- Logs to `~/Library/Logs/gbrain-openclaw/nightly-maintenance.log`.
+
+Check it:
+
+```bash
+launchctl print gui/$UID/ai.openclaw.circleback-gbrain-nightly
+tail -n 100 ~/Library/Logs/gbrain-openclaw/nightly-maintenance.log
+```
+
+Run it manually:
+
+```bash
+./bin/nightly-maintenance.sh
+```
 
 ## OpenClaw habit
 

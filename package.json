@@ -10,7 +10,7 @@
     "circleback-gbrain-pull": "./bin/circleback-cloudflare-pull.mjs"
   },
   "scripts": {
-    "check": "node --check bin/circleback-webhook-server.mjs && node --check bin/circleback-backfill.mjs && node --check bin/circleback-cloudflare-pull.mjs && bash -n bin/gbrain-meeting-maintenance.sh && bash -n bin/circleback-reconcile-recent.sh",
+    "check": "node --check bin/circleback-webhook-server.mjs && node --check bin/circleback-backfill.mjs && node --check bin/circleback-cloudflare-pull.mjs && bash -n bin/gbrain-meeting-maintenance.sh && bash -n bin/circleback-reconcile-recent.sh && bash -n bin/nightly-maintenance.sh",
     "health": "curl -sS http://127.0.0.1:3137/health"
   },
   "keywords": [
