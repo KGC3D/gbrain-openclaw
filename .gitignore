@@ -1,0 +1,10 @@
+.DS_Store
+config.env
+*.log
+node_modules/
+brain/
+raw/
+meetings/
+*.sqlite
+*.db
+*.pglite/

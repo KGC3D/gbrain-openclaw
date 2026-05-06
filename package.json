@@ -1,0 +1,23 @@
+{
+  "name": "gbrain-openclaw-circleback",
+  "version": "0.1.0",
+  "private": false,
+  "type": "module",
+  "description": "Local Circleback webhook and CLI bridge that writes meeting memory into GBrain for OpenClaw.",
+  "bin": {
+    "circleback-gbrain-webhook": "./bin/circleback-webhook-server.mjs",
+    "circleback-gbrain-backfill": "./bin/circleback-backfill.mjs"
+  },
+  "scripts": {
+    "check": "node --check bin/circleback-webhook-server.mjs && node --check bin/circleback-backfill.mjs && bash -n bin/gbrain-meeting-maintenance.sh && bash -n bin/circleback-reconcile-recent.sh",
+    "health": "curl -sS http://127.0.0.1:3137/health"
+  },
+  "keywords": [
+    "openclaw",
+    "gbrain",
+    "circleback",
+    "meetings",
+    "webhook"
+  ],
+  "license": "MIT"
+}
