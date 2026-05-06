@@ -54,6 +54,7 @@ Set these in `config.env`:
 CIRCLEBACK_WORKER_URL=https://your-worker.example.workers.dev
 CIRCLEBACK_WORKER_PENDING_PATH=/api/inbox/pending
 CIRCLEBACK_WORKER_ACK_PATH=/api/inbox/ack
+CIRCLEBACK_WORKER_AUTH_HEADER=x-control-room-secret
 CONTROL_ROOM_PULL_SECRET=your-local-pull-secret
 ```
 

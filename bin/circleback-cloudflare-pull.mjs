@@ -13,6 +13,7 @@ const workerBaseUrl = (process.env.CIRCLEBACK_WORKER_URL || "").replace(/\/+$/, 
 const pullSecret = process.env.CONTROL_ROOM_PULL_SECRET || process.env.CIRCLEBACK_WORKER_PULL_SECRET || "";
 const pendingPath = process.env.CIRCLEBACK_WORKER_PENDING_PATH || "/api/inbox/pending";
 const ackPath = process.env.CIRCLEBACK_WORKER_ACK_PATH || "/api/inbox/ack";
+const authHeader = process.env.CIRCLEBACK_WORKER_AUTH_HEADER || "x-control-room-secret";
 const embed = process.env.GBRAIN_EMBED_ON_INGEST !== "false";
 
 if (!workerBaseUrl) {
@@ -27,7 +28,7 @@ if (!pullSecret) {
 
 function authHeaders(extra = {}) {
   return {
-    authorization: `Bearer ${pullSecret}`,
+    [authHeader]: pullSecret,
     "content-type": "application/json",
     ...extra,
   };
